@@ -1,6 +1,6 @@
 % design-coupling
 
-function design_coupling_perturb_xopt_fix_initial_guess()
+function design_coupling()
 
     xLast = []; % Last place computeall was called
     myf = []; % Use for objective at xLast
@@ -37,8 +37,8 @@ function design_coupling_perturb_xopt_fix_initial_guess()
 
     [f, c, ~] = computePerformance(x0, vehicle, range, payload);
 
-    opt = optimoptions('fmincon', 'Algorithm', 'sqp', 'Display', 'final-detailed', 'MaxIterations', 500, 'ScaleProblem', false, 'UseParallel', true, 'MaxFunctionEvaluations', 10000);
-    [xopt, fopt, eopt, oopt] = fmincon(@(x) objfun(x, vehicle, range, payload), x0, [], [], [], [], lb, ub, @(x) constr(x, vehicle, range, payload), opt)
+    opt = optimoptions('fmincon', 'Algorithm', 'sqp', 'Display', 'final-detailed', 'MaxIterations', 500, 'ScaleProblem', false, 'MaxFunctionEvaluations', 10000);
+    [xopt, fopt, eopt, oopt] = fmincon(@(x) objfun(x, vehicle, range, payload), x0, [], [], [], [], lb, ub, @(x) constr(x, vehicle, range, payload), opt);
     
     format long
     [fopt, copt, ~] = computePerformance(xopt, vehicle, range, payload)
@@ -59,25 +59,25 @@ function design_coupling_perturb_xopt_fix_initial_guess()
         xmdx(idx) = xopt(idx) - dx;
         
         if idx~=1 && idx<length(x0)-1
-        xpdx(1:idx-1)=x0(1:idx-1);
-        xpdx(idx+2:end)=x0(idx+2:end);
+        xpdx(1:idx-1)=xopt(1:idx-1);
+        xpdx(idx+2:end)=xopt(idx+2:end);
         elseif idx==1 
-            xpdx(idx+2:end)=x0(idx+2:end);
+            xpdx(idx+2:end)=xopt(idx+2:end);
         elseif idx==length(x0)-1
-              xpdx(1:idx-1)=x0(1:idx-1);
+              xpdx(1:idx-1)=xopt(1:idx-1);
         elseif idx==length(x0)
-            xpdx(2:idx-1)=x0(2:idx-1);
+            xpdx(2:idx-1)=xopt(2:idx-1);
 
         end
         if idx~=1 && idx<length(x0)-1
-        xmdx(1:idx-1)=x0(1:idx-1);
-        xmdx(idx+2:end)=x0(idx+2:end);
+        xmdx(1:idx-1)=xopt(1:idx-1);
+        xmdx(idx+2:end)=xopt(idx+2:end);
         elseif idx==1 
-            xmdx(idx+2:end)=x0(idx+2:end);
+            xmdx(idx+2:end)=xopt(idx+2:end);
         elseif idx==length(x0)-1
-              xmdx(1:idx-1)=x0(1:idx-1);
+              xmdx(1:idx-1)=xopt(1:idx-1);
         elseif idx==length(x0)
-            xmdx(2:idx-1)=x0(2:idx-1);
+            xmdx(2:idx-1)=xopt(2:idx-1);
 
         end
         [fpdx, cpdx, ~] = computePerformance(xpdx, vehicle, range, payload);
@@ -91,8 +91,7 @@ function design_coupling_perturb_xopt_fix_initial_guess()
         if (eptmp == 0) || (emtmp == 0) || (eptmp == -2) || (emtmp == -2)
             EXITFLAGWRONG = [EXITFLAGWRONG, idx];
         end
-      
-        for jdx = 1:length(x0)
+       for jdx = 1:length(x0)
             data_dxoptdxpdx(idx, jdx) = abs((xptmp(idx) - xopt(jdx))/(xpdx(idx) - xopt(idx)));
             data_dxoptdxmdx(idx, jdx) = abs((xmtmp(idx) - xopt(jdx))/(xmdx(idx) - xopt(idx)));
         end
@@ -140,6 +139,7 @@ function design_coupling_perturb_xopt_fix_initial_guess()
     ylabel('Influenced design variable', 'Color', [0 0 0]);
 
     eval(['export_fig ', 'design_coupling', ' -pdf']);
+
 
 
     function y = objfun(x, vehicle, range, payload)

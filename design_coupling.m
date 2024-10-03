@@ -38,7 +38,7 @@ function design_coupling()
     [f, c, ~] = computePerformance(x0, vehicle, range, payload);
 
     opt = optimoptions('fmincon', 'Algorithm', 'sqp', 'Display', 'final-detailed', 'MaxIterations', 500, 'ScaleProblem', false, 'UseParallel', true, 'MaxFunctionEvaluations', 10000);
-    [xopt, fopt, eopt, oopt] = fmincon(@(x) objfun(x, vehicle, range, payload), x0, [], [], [], [], lb, ub, @(x) constr(x, vehicle, range, payload), opt)
+    [xopt, fopt, eopt, oopt] = fmincon(@(x) objfun(x, vehicle, range, payload), x0, [], [], [], [], lb, ub, @(x) constr(x, vehicle, range, payload), opt);
     
     format long
     [fopt, copt, ~] = computePerformance(xopt, vehicle, range, payload)

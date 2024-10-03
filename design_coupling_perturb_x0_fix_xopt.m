@@ -38,7 +38,7 @@ function design_coupling_perturb_x0_fix_xopt()
     [f, c, ~] = computePerformance(x0, vehicle, range, payload);
 
     opt = optimoptions('fmincon', 'Algorithm', 'sqp', 'Display', 'final-detailed', 'MaxIterations', 500, 'ScaleProblem', false, 'UseParallel', true, 'MaxFunctionEvaluations', 10000);
-    [xopt, fopt, eopt, oopt] = fmincon(@(x) objfun(x, vehicle, range, payload), x0, [], [], [], [], lb, ub, @(x) constr(x, vehicle, range, payload), opt)
+    [xopt, fopt, eopt, oopt] = fmincon(@(x) objfun(x, vehicle, range, payload), x0, [], [], [], [], lb, ub, @(x) constr(x, vehicle, range, payload), opt);
     
     format long
     [fopt, copt, ~] = computePerformance(xopt, vehicle, range, payload)
@@ -91,38 +91,23 @@ function design_coupling_perturb_x0_fix_xopt()
         if (eptmp == 0) || (emtmp == 0) || (eptmp == -2) || (emtmp == -2)
             EXITFLAGWRONG = [EXITFLAGWRONG, idx];
         end
-        if idx<=length(x0)-1
-        for jdx = idx:idx+1
-            data_dxoptdxpdx(idx, jdx) = (xptmp(jdx) - xopt(jdx))/(xpdx(idx) - xopt(idx));
-            data_dxoptdxmdx(idx, jdx) = (xmtmp(jdx) - xopt(jdx))/(xmdx(idx) - xopt(idx));
-        end
-        end
-        if idx==length(x0)
-        for jdx = idx:-(length(x0)-1):1
-            data_dxoptdxpdx(idx, jdx) = (xptmp(jdx) - xopt(jdx))/(xpdx(idx) - xopt(idx));
-            data_dxoptdxmdx(idx, jdx) = (xmtmp(jdx) - xopt(jdx))/(xmdx(idx) - xopt(idx));
-        end
+        
+         for jdx = 1:length(x0)
+            data_dxoptdxpdx(idx, jdx) = abs((xptmp(idx) - xopt(jdx))/(xpdx(idx) - xopt(idx)));
+            data_dxoptdxmdx(idx, jdx) = abs((xmtmp(idx) - xopt(jdx))/(xmdx(idx) - xopt(idx)));
         end
     end
 
     save('data_dxoptdxpmdx.mat', 'data_dxoptdxpdx', 'data_dxoptdxmdx', '-v7.3');
 
-    l10min = min([min(min(log10(abs(data_dxoptdxpdx(data_dxoptdxpdx~=0))))), min(min(log10(abs(data_dxoptdxmdx(data_dxoptdxmdx~=0)))))]);
-    l10max = max([max(max(log10(abs(data_dxoptdxpdx(data_dxoptdxpdx~=0))))), max(max(log10(abs(data_dxoptdxmdx(data_dxoptdxmdx~=0)))))]);
+    l10min = min([min(min(log10(abs(data_dxoptdxpdx)))), min(min(log10(abs(data_dxoptdxmdx))))]);
+    l10max = max([max(max(log10(abs(data_dxoptdxpdx)))), max(max(log10(abs(data_dxoptdxmdx))))]);
     l10absmax = max([abs(l10min), abs(l10max)]);
     icm = linspace(-l10absmax, l10absmax, 101)';
     vcm = jet(101);
     figure('Color', [1,1,1]);
-    for idx = 1:length(x0)-1
-        for jdx = idx:idx+1
-            rectangle('Position', [idx-0.4, 11-(jdx+0.4), 0.8, 0.8], 'Curvature', 0.1, 'EdgeColor', 'none', 'FaceColor', interp1(icm, vcm, log10(abs(data_dxoptdxpdx(idx, jdx))))); hold on;
-            if idx == jdx
-                rectangle('Position', [idx-0.3, 11-(jdx+0.3), 0.6, 0.6], 'Curvature', 0.1, 'EdgeColor', 'none', 'FaceColor', [1 1 1]); hold on;
-            end
-        end
-    end
-    for idx = length(x0)
-        for jdx = idx:-(length(x0)-1):1
+    for idx = 1:length(x0)
+        for jdx = 1:length(x0)
             rectangle('Position', [idx-0.4, 11-(jdx+0.4), 0.8, 0.8], 'Curvature', 0.1, 'EdgeColor', 'none', 'FaceColor', interp1(icm, vcm, log10(abs(data_dxoptdxpdx(idx, jdx))))); hold on;
             if idx == jdx
                 rectangle('Position', [idx-0.3, 11-(jdx+0.3), 0.6, 0.6], 'Curvature', 0.1, 'EdgeColor', 'none', 'FaceColor', [1 1 1]); hold on;

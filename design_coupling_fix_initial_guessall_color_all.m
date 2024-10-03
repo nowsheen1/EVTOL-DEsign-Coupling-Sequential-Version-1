@@ -1,6 +1,6 @@
 % design-coupling
 
-function design_coupling_perturb_xopt_fix_initial_guess()
+function design_coupling_fix_initial_guess_all()
 
     xLast = []; % Last place computeall was called
     myf = []; % Use for objective at xLast
@@ -52,11 +52,11 @@ function design_coupling_perturb_xopt_fix_initial_guess()
 
     EXITFLAGWRONG = [];
     for idx = 1:length(x0)
-        xpdx = xopt;
-        xmdx = xopt;
+        xpdx = x0;
+        xmdx = x0;
         dx = (ub(idx) - lb(idx))/100.0;
-        xpdx(idx) = xopt(idx) + dx;
-        xmdx(idx) = xopt(idx) - dx;
+        xpdx(idx) = x0(idx) + dx;
+        xmdx(idx) = x0(idx) - dx;
         
         if idx~=1 && idx<length(x0)-1
         xpdx(1:idx-1)=x0(1:idx-1);
@@ -91,7 +91,6 @@ function design_coupling_perturb_xopt_fix_initial_guess()
         if (eptmp == 0) || (emtmp == 0) || (eptmp == -2) || (emtmp == -2)
             EXITFLAGWRONG = [EXITFLAGWRONG, idx];
         end
-      
         for jdx = 1:length(x0)
             data_dxoptdxpdx(idx, jdx) = abs((xptmp(idx) - xopt(jdx))/(xpdx(idx) - xopt(idx)));
             data_dxoptdxmdx(idx, jdx) = abs((xmtmp(idx) - xopt(jdx))/(xmdx(idx) - xopt(idx)));
